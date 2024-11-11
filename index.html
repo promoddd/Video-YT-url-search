@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recherche de Vidéo YouTube</title>
+    <style>
+        :root {
+            --bg-color-light: #f0f0f0;
+            --text-color-light: #000;
+            --container-bg-color-light: white;
+            --button-bg-color-light: #007BFF;
+            --accent-color-light: #007BFF;
+
+            --bg-color-dark: #1e1e1e;
+            --text-color-dark: #fff;
+            --container-bg-color-dark: #2c2c2c;
+            --button-bg-color-dark: #4caf50;
+            --accent-color-dark: #ff4081;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color-light);
+            color: var(--text-color-light);
+            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--container-bg-color-light);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            animation: slide-in 0.5s ease-out;
+        }
+
+        @keyframes slide-in {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: var(--button-bg-color-light);
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--accent-color-light);
+        }
+
+        .video-info {
+            margin-top: 20px;
+            text-align: left;
+            animation: fade-in 0.5s ease-out;
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .video-info img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .video-info iframe {
+            width: 100%;
+            height: 315px;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+
+        .video-details {
+            font-size: 18px;
+            color: var(--text-color-light);
+            line-height: 1.6;
+        }
+
+        .theme-toggle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--button-bg-color-light);
+            color: white;
+            border: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            input[type="text"], button {
+                font-size: 14px;
+            }
+
+            .video-details {
+                font-size: 16px;
+            }
+        }
+
+        .dark-theme {
+            --bg-color-light: var(--bg-color-dark);
+            --text-color-light: var(--text-color-dark);
+            --container-bg-color-light: var(--container-bg-color-dark);
+            --button-bg-color-light: var(--button-bg-color-dark);
+            --accent-color-light: var(--accent-color-dark);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Recherche de Vidéo YouTube</h1>
+        <input type="text" id="youtube-url" placeholder="Entrez l'URL de la vidéo YouTube">
+        <button onclick="getVideoInfo()">Rechercher</button>
+        <div id="result" class="video-info"></div>
+    </div>
+
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+
+    <script>
+        function toggleTheme() {
+            const root = document.documentElement;
+            const currentTheme = root.classList.toggle('dark-theme');
+            const themeToggleBtn = document.querySelector('.theme-toggle');
+
+            if (currentTheme) {
+                themeToggleBtn.textContent = '☀️';
+            } else {
+                themeToggleBtn.textContent = '🌙';
+            }
+        }
+
+        async function getVideoInfo() {
+            const apiKey = 'AIzaSyDb-2OkDX_twOQZkQEXyuK7KnVs3utBoZ8'; // Utilisation de ta clé API
+            const urlInput = document.getElementById('youtube-url').value;
+            let videoId;
+
+            if (urlInput.includes('youtu.be/')) {
+                videoId = urlInput.split('youtu.be/')[1].split('?')[0];
+            } else if (urlInput.includes('youtube.com/watch?v=')) {
+                videoId = urlInput.split('v=')[1].split('&')[0];
+            }
+
+            const result = document.getElementById('result');
+
+            if (videoId) {
+                const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${apiKey}`);
+                const data = await response.json();
+                const video = data.items[0];
+
+                if (video) {
+                    result.innerHTML = `
+                        <img src="${video.snippet.thumbnails.high.url}" alt="${video.snippet.title}">
+                        <div class="video-details">
+                            <p><strong>Titre :</strong> ${video.snippet.title}</p>
+                            <p><strong>Vues :</strong> ${video.statistics.viewCount}</p>
+                            <p><strong>J'aime :</strong> ${video.statistics.likeCount}</p>
+                            <p><strong>Date de publication :</strong> ${video.snippet.publishedAt}</p>
+                        </div>
+                        <iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    `;
+                } else {
+                    result.innerHTML = '<p>Aucune vidéo trouvée.</p>';
+                }
+            } else {
+                result.innerHTML = '<p>URL non valide.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
